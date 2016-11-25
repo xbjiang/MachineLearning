@@ -124,3 +124,45 @@ string chooseBestFeatureToSplit(map<string, vector<string>>& data)
 	}
 	return bestFeature;
 }
+
+// 返回出现次数最多的分类名称
+string majorityCnt(vector<string> classList)
+{
+	map<string, int> cntMap;
+	for (int i = 0; i < classList.size(); i++)
+	{
+		cntMap[classList[i]]++;
+	}
+	string result = "";
+	int maxCnt = 0;
+	map<string, int>::iterator it;
+	for (it = cntMap.begin(); it != cntMap.end(); ++it)
+	{
+		if (it->second > maxCnt)
+		{
+			maxCnt = it->second;
+			result = it->first;
+		}
+	}
+	return result;
+}
+
+struct Node
+{
+	string attribute;
+	string val;
+	bool isLeaf;
+	Node()
+	{
+		attribute = "";
+		val = "";
+		isLeaf = false;
+	}
+};
+
+
+
+
+
+
+
