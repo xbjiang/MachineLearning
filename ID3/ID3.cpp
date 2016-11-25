@@ -175,17 +175,28 @@ Node* createTree(Node* root, map<string, vector<string>>& data)
 	if (classSet.size() == 1)
 	{
 		root->isLeaf = true;
-		root->val = *classSet.begin();
+		root->attribute = *classSet.begin();
 		return root;
 	}
 
 	if (data.size() == 1)
 	{
 		root->isLeaf = true;
-		root->val = majorityCnt(classList);
+		root->attribute = majorityCnt(classList);
 		return root;
 	}
-	string bestFeature = chooseBestFeatureTo
+	
+	string bestFeature = chooseBestFeatureToSplit(data);
+	vector<string> featureValueList = createFeatureValueList(data, bestFeature);
+	root->attribute = bestFeature;
+	
+	for (string fVal : featureValueList)
+	{
+		Node* newNode = new Node();
+		createTree(newNode, splitData(data, bestFeature, fVal));
+		newNode->val = fVal;
+		root->childs.push_back(newNode);
+	}
 }
 
 
