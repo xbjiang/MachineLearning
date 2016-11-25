@@ -152,6 +152,7 @@ struct Node
 	string attribute;
 	string val;
 	bool isLeaf;
+	vector<Node*> childs;
 	Node()
 	{
 		attribute = "";
@@ -160,6 +161,32 @@ struct Node
 	}
 };
 
+Node* createTree(Node* root, map<string, vector<string>>& data)
+{
+	vector<string> classList;
+	set<string> classSet;
+
+	for (string& entry : data["label"])
+	{
+		classList.push_back(entry);
+		classSet.insert(entry);
+	}
+
+	if (classSet.size() == 1)
+	{
+		root->isLeaf = true;
+		root->val = *classSet.begin();
+		return root;
+	}
+
+	if (data.size() == 1)
+	{
+		root->isLeaf = true;
+		root->val = majorityCnt(classList);
+		return root;
+	}
+	string bestFeature = chooseBestFeatureTo
+}
 
 
 
