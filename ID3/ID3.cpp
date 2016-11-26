@@ -1,4 +1,4 @@
-#include <string>
+ï»¿#include <string>
 #include <map>
 #include <set>
 #include <vector>
@@ -30,7 +30,7 @@ string x[N][feature+1] =
 
 string attributes[] = { "Outlook", "Temperature", "Humidity", "Wind", "label" }; // label for play tennis or not
 
-// ½«¶şÎ¬Êı¾İ×ª»»Îª´Óattributeµ½valueÏòÁ¿µÄmap
+// å°†äºŒç»´æ•°æ®è½¬æ¢ä¸ºä»attributeåˆ°valueå‘é‡çš„map
 void createDateSet()
 {
 	for (int i = 0; i < feature + 1; i++)
@@ -41,7 +41,7 @@ void createDateSet()
 	}
 }
 
-// ¼ÆËãĞÅÏ¢ìØ
+// è®¡ç®—ä¿¡æ¯ç†µ
 double calcEntropy(map<string, vector<string>>& data)
 {
 	map<string, int> classCount;
@@ -59,20 +59,20 @@ double calcEntropy(map<string, vector<string>>& data)
 	return result;
 }
 
-//°´ÕÕÖ¸¶¨ÌØÕ÷»®·ÖÊı¾İ¼¯
+//æŒ‰ç…§æŒ‡å®šç‰¹å¾åˆ’åˆ†æ•°æ®é›†
 map<string, vector<string>> splitData(map<string, vector<string>>& data, string attribute, string fVal)
 {
 	map<string, vector<string>> ret;
 	for (auto& entry : data)
 	{
-		//³õÊ¼»¯£¬retÎªÒÔattributeÎª¼ü£¬attribute valueÎªÖµµÄmap
-		//²»°üÀ¨»®·ÖµÄÊôĞÔ
+		//åˆå§‹åŒ–ï¼Œretä¸ºä»¥attributeä¸ºé”®ï¼Œattribute valueä¸ºå€¼çš„map
+		//ä¸åŒ…æ‹¬åˆ’åˆ†çš„å±æ€§
 		if (entry.first != attribute)
 			ret[entry.first] = vector<string>(); 
 	}
 	for (int i = 0; i < data[attribute].size(); i++)
 	{
-		//ÕÒ³öÖ¸¶¨attribute valueµÄÊı¾İ
+		//æ‰¾å‡ºæŒ‡å®šattribute valueçš„æ•°æ®
 		if (data[attribute][i] == fVal)
 		{
 			for (auto& entry : data)
@@ -85,7 +85,7 @@ map<string, vector<string>> splitData(map<string, vector<string>>& data, string 
 	return ret;
 }
 
-//¸ù¾İÖ¸¶¨ÌØÕ÷Éú³ÉÌØÕ÷È¡ÖµÁĞ±í
+//æ ¹æ®æŒ‡å®šç‰¹å¾ç”Ÿæˆç‰¹å¾å–å€¼åˆ—è¡¨
 vector<string> createFeatureValueList(map<string, vector<string>>& data, string attribute)
 {
 	set<string> aSet;
@@ -97,7 +97,7 @@ vector<string> createFeatureValueList(map<string, vector<string>>& data, string 
 	return ret;
 }
 
-// ÕÒ³ö×îÓÅ»®·ÖÊôĞÔ
+// æ‰¾å‡ºæœ€ä¼˜åˆ’åˆ†å±æ€§
 string chooseBestFeatureToSplit(map<string, vector<string>>& data)
 {
 	double currentEntropy = calcEntropy(data);
@@ -125,7 +125,7 @@ string chooseBestFeatureToSplit(map<string, vector<string>>& data)
 	return bestFeature;
 }
 
-// ·µ»Ø³öÏÖ´ÎÊı×î¶àµÄ·ÖÀàÃû³Æ
+// è¿”å›å‡ºç°æ¬¡æ•°æœ€å¤šçš„åˆ†ç±»åç§°
 string majorityCnt(vector<string> classList)
 {
 	map<string, int> cntMap;
