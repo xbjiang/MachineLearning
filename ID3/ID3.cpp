@@ -3,6 +3,7 @@
 #include <set>
 #include <vector>
 #include <math.h>
+#include <iostream>
 
 using namespace std;
 
@@ -31,18 +32,19 @@ string x[N][feature+1] =
 string attributes[] = { "Outlook", "Temperature", "Humidity", "Wind", "label" }; // label for play tennis or not
 
 // 将二维数据转换为从attribute到value向量的map
-void createDateSet()
+void createDataSet()
 {
+	X.clear();
 	for (int i = 0; i < feature + 1; i++)
 	{
-		X[attributes[i]] = vector<string>(N);
+		X.insert(pair<string, vector<string> >(attributes[i], vector<string>(N)));
 		for (int j = 0; j < N; j++)
 			X[attributes[i]][j] = x[j][i];
 	}
 }
 
 // 计算信息熵
-double calcEntropy(map<string, vector<string>>& data)
+double calcEntropy(map<string, vector<string> >& data)
 {
 	map<string, int> classCount;
 	
@@ -53,16 +55,16 @@ double calcEntropy(map<string, vector<string>>& data)
 	double result = 0;
 	for (auto entry : classCount)
 	{
-		double ratio = (double)entry.second / (data.size() - 1);
+		double ratio = (double)entry.second / (data["label"].size());
 		result -= ratio * log(ratio) / log(2);
 	}
 	return result;
 }
 
 //按照指定特征划分数据集
-map<string, vector<string>> splitData(map<string, vector<string>>& data, string attribute, string fVal)
+map<string, vector<string>> splitData(map<string, vector<string> >& data, string attribute, string fVal)
 {
-	map<string, vector<string>> ret;
+	map<string, vector<string> > ret;
 	for (auto& entry : data)
 	{
 		//初始化，ret为以attribute为键，attribute value为值的map
@@ -86,7 +88,7 @@ map<string, vector<string>> splitData(map<string, vector<string>>& data, string 
 }
 
 //根据指定特征生成特征取值列表
-vector<string> createFeatureValueList(map<string, vector<string>>& data, string attribute)
+vector<string> createFeatureValueList(map<string, vector<string> >& data, string attribute)
 {
 	set<string> aSet;
 	for (int i = 1; i < data[attribute].size(); i++)
@@ -98,7 +100,7 @@ vector<string> createFeatureValueList(map<string, vector<string>>& data, string 
 }
 
 // 找出最优划分属性
-string chooseBestFeatureToSplit(map<string, vector<string>>& data)
+string chooseBestFeatureToSplit(map<string, vector<string> >& data)
 {
 	double currentEntropy = calcEntropy(data);
 	double maxInfoGain = 0;
@@ -112,7 +114,7 @@ string chooseBestFeatureToSplit(map<string, vector<string>>& data)
 		vector<string> featureValueList = createFeatureValueList(data, entry.first);
 		for (string fVal : featureValueList)
 		{
-			map<string, vector<string>> subData = splitData(data, entry.first, fVal);
+			map<string, vector<string> > subData = splitData(data, entry.first, fVal);
 			double ratio = (double)subData["label"].size() / (double)data["label"].size();
 			nextEntropy += ratio * calcEntropy(subData);
 		}
@@ -126,7 +128,7 @@ string chooseBestFeatureToSplit(map<string, vector<string>>& data)
 }
 
 // 返回出现次数最多的分类名称
-string majorityCnt(vector<string> classList)
+string majorityCnt(vector<string>& classList)
 {
 	map<string, int> cntMap;
 	for (int i = 0; i < classList.size(); i++)
@@ -161,10 +163,14 @@ struct Node
 	}
 };
 
-Node* createTree(Node* root, map<string, vector<string>>& data)
+Node* root = NULL;
+
+Node* createTree(Node* root, map<string, vector<string> >& data)
 {
 	vector<string> classList;
 	set<string> classSet;
+	if (root == NULL)
+		root = new Node();
 
 	for (string& entry : data["label"])
 	{
@@ -190,15 +196,41 @@ Node* createTree(Node* root, map<string, vector<string>>& data)
 	vector<string> featureValueList = createFeatureValueList(data, bestFeature);
 	root->attribute = bestFeature;
 	
-	for (string fVal : featureValueList)
+	for (int i = 0; i < featureValueList.size(); i++)
 	{
 		Node* newNode = new Node();
-		createTree(newNode, splitData(data, bestFeature, fVal));
-		newNode->val = fVal;
+		createTree(newNode, splitData(data, bestFeature, featureValueList[i]));
+		newNode->val = featureValueList[i];
 		root->childs.push_back(newNode);
+	}
+	return root;
+}
+
+void print(Node* root, int depth)
+{
+	for (int i = 0; i < depth; i++)
+		cout << "\t";
+
+	if (root->val != "")
+	{
+		cout << root->val << endl;
+		for (int i = 0; i < depth + 1; i++)
+			cout << "\t";
+	}
+	cout << root->attribute << endl;
+	vector<Node*>::iterator it;
+	for (it = root->childs.begin(); it != root->childs.end(); ++it)
+	{
+		print(*it, depth+1);
 	}
 }
 
+int main()
+{
+	createDataSet();
+	root = createTree(root, X);
+	print(root, 0);
+}
 
 
 
