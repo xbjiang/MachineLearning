@@ -177,13 +177,15 @@ Node* createTree(Node* root, map<string, vector<string> >& data)
 		classSet.insert(entry);
 	}
 
-	if (classSet.size() == 1)
+	//所有样本同属于一类，停止划分
+	if (classSet.size() == 1) 
 	{
 		root->isLeaf = true;
 		root->attribute = *classSet.begin();
 		return root;
 	}
-
+	
+	//遍历完所有属性，返回出现次数最多的类别
 	if (data.size() == 1)
 	{
 		root->isLeaf = true;
@@ -191,10 +193,12 @@ Node* createTree(Node* root, map<string, vector<string> >& data)
 		return root;
 	}
 	
+	//选择最优划分属性
 	string bestFeature = chooseBestFeatureToSplit(data);
 	vector<string> featureValueList = createFeatureValueList(data, bestFeature);
 	root->attribute = bestFeature;
 	
+	//为最优划分属性在样本中的所有取值生成一个分支
 	for (int i = 0; i < featureValueList.size(); i++)
 	{
 		Node* newNode = new Node();
@@ -224,12 +228,55 @@ void print(Node* root, int depth)
 	}
 }
 
+string classify(Node* root, vector<string>& attribute, string* test)
+{
+	if (root->isLeaf)
+		return root->attribute;
+	int firstFeatureIndex;
+	for (int i = 0; i < attribute.size(); i++)
+	{
+		if (root->attribute == attribute[i])
+		{
+			firstFeatureIndex = i;
+			break;
+		}
+	}
+	for (int i = 0; i < root->childs.size(); i++)
+	{
+		if (test[firstFeatureIndex] == root->childs[i]->val)
+			return classify(root->childs[i], attribute, test);
+	}
+}
+
+void freeTree(Node* root)
+{
+	if (root == NULL)
+		return;
+	for (int i = 0; i < root->childs.size(); i++)
+		freeTree(root->childs[i]);
+	delete root;
+}
 int main()
 {
 	createDataSet();
-	//cout << chooseBestFeatureToSplit(X) << endl;
 	root = createTree(root, X);
 	print(root, 0);
+
+	string test[] = {"Sunny", "Hot", "High", "Strong"};
+	vector<string> attribute;
+	cout << endl << "Attribute: ";
+	for (int i = 0; i < feature; i++)
+	{
+		cout << attributes[i] << "\t";
+		attribute.push_back(attributes[i]);
+	}
+	cout << endl << "Value:     ";
+	for (int i = 0; i < feature; i++)
+		cout << test[i] << "\t";
+	cout << endl << "Predict:   ";
+	cout << classify(root, attribute, test) << endl;
+	freeTree(root);
+	return 0;
 }
 
 
