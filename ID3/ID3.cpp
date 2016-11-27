@@ -48,15 +48,15 @@ double calcEntropy(map<string, vector<string> >& data)
 {
 	map<string, int> classCount;
 	
-	for (int i = 1; i < data["label"].size(); i++)
+	for (int i = 0; i < data["label"].size(); i++)
 	{
 		classCount[data["label"][i]] += 1;
  	}
 	double result = 0;
 	for (auto entry : classCount)
 	{
-		double ratio = (double)entry.second / (data["label"].size());
-		result -= ratio * log(ratio) / log(2);
+		double ratio = (double)entry.second / (double)(data["label"].size());
+		result -= ratio * (log(ratio) / log(2));
 	}
 	return result;
 }
@@ -104,7 +104,6 @@ string chooseBestFeatureToSplit(map<string, vector<string> >& data)
 {
 	double currentEntropy = calcEntropy(data);
 	double maxInfoGain = 0;
-	double infoGain = 0;
 	string bestFeature = "";
 	for (auto& entry : data)
 	{
@@ -118,7 +117,7 @@ string chooseBestFeatureToSplit(map<string, vector<string> >& data)
 			double ratio = (double)subData["label"].size() / (double)data["label"].size();
 			nextEntropy += ratio * calcEntropy(subData);
 		}
-		infoGain = currentEntropy - nextEntropy;
+		double infoGain = currentEntropy - nextEntropy;
 		if (infoGain > maxInfoGain) {
 			maxInfoGain = infoGain;
 			bestFeature = entry.first;
@@ -228,6 +227,7 @@ void print(Node* root, int depth)
 int main()
 {
 	createDataSet();
+	//cout << chooseBestFeatureToSplit(X) << endl;
 	root = createTree(root, X);
 	print(root, 0);
 }
