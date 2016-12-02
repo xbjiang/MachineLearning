@@ -76,13 +76,13 @@ class NaiveBayes {
 			cout << endl;
 		}
 
-		void words2vec(int idx)
+		void words2vec(vector<string>& doc)
 		{
 			int len = vocab_list.size() + 1;
 			fill(return_vec, return_vec+len, 0);
-			for (int i = 0; i < posting_list[idx].size(); i++)
+			for (int i = 0; i < doc.size(); i++)
 			{
-				int index = vocab_list[posting_list[idx][i]];
+				int index = vocab_list[doc[i]];
 				if (index != 0)
 					return_vec[index] = 1;
 			}
@@ -93,7 +93,7 @@ class NaiveBayes {
 			train_mat.clear();
 			for (int i = 0; i < class_list.size(); i++)
 			{
-				words2vec(i);
+				words2vec(posting_list[i]);
 				train_mat.push_back(vector<int>(return_vec, return_vec + vocab_list.size() + 1));
 			}
 		}
@@ -126,10 +126,10 @@ class NaiveBayes {
 			int num_abusive = accumulate(class_list.begin(), class_list.end(), 0);
 			p_c1 = (float)num_abusive / (float)num_records;
 
-			p_vec_c0.resize(vocab_list.size() + 1, 0); // words frequency vector
-			p_vec_c1.resize(vocab_list.size() + 1, 0);
-			float total_num_c0 = 0.0; // total numbers of words in non-abusive records
-			float total_num_c1 = 0.0;
+			p_vec_c0.resize(vocab_list.size() + 1, 1.0); // words frequency vector
+			p_vec_c1.resize(vocab_list.size() + 1, 1.0);
+			float total_num_c0 = 2.0; // total numbers of words in non-abusive records
+			float total_num_c1 = 2.0;
 			for (int i = 0; i < class_list.size(); i++)
 			{
 				if (class_list[i] == 0)
@@ -152,9 +152,34 @@ class NaiveBayes {
 
 			for (int i = 0; i < p_vec_c0.size(); i++)
 			{
-				p_vec_c0[i] /= total_num_c0;
-				p_vec_c1[i] /= total_num_c1;
+				p_vec_c0[i] = log(p_vec_c0[i] / total_num_c0);
+				p_vec_c1[i] = log(p_vec_c1[i] / total_num_c1);
 			}
+		}
+
+		int classify(vector<string> doc)
+		{
+			words2vec(doc);
+			/*float p0 = inner_product(p_vec_c0.begin() + 1, p_vec_c0.end(), return_vec + 1, 0)
+				+ log(1 - p_c1);
+			float p1 = inner_product(p_vec_c1.begin() + 1, p_vec_c0.end(), return_vec + 1, 0)
+				+ log(p_c1);*/
+			float p0 = 0.0;
+			float p1 = 0.0;
+			for (int i = 0; i < p_vec_c0.size(); i++)
+			{
+				if (return_vec[i] == 1)
+				{
+					p0 += p_vec_c0[i];
+					p1 += p_vec_c1[i];
+				}
+			}
+			p0 += log(1.0 - p_c1);
+			p1 += log(p_c1);
+			cout << "p0: " << p0 << endl;
+			cout << "p1: " << p1 << endl;
+			if (p0 > p1) return 0;
+			return 1;
 		}
 
 		~NaiveBayes()
@@ -170,4 +195,9 @@ int main()
 	nb.create_train_mat();
 	nb.trainNB();
 	nb.print();
+
+	vector<string> doc1 = {"love", "my", "dalmation"};
+	vector<string> doc2 = {"stupid", "garbage"};
+	cout << "doc1 classified as:" << nb.classify(doc1) << endl;
+	cout << "doc2 classified as:" << nb.classify(doc2) << endl;
 }
