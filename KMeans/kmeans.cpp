@@ -3,9 +3,10 @@
 */
 
 #include <iostream>
-#include <ifstream>
+#include <fstream>
 #include <sstream>
 #include <vector>
+#include <cstdlib>
 
 using namespace std;
 
@@ -14,7 +15,7 @@ class KMeans {
 private:
     vector< vector<T> > dataSet;
     int row, col;
-    vector<T> centroids;
+    vector< vector<T> > centroids;
     int k;
     typedef struct MinMax {
         T Min;
@@ -38,6 +39,7 @@ public:
     tMinMax getMinMax(int idx);
     void kmeans();
     T distEuclid(vector<T>& vec1, vector<T>& vec2);
+	void print();
 };
 
 template <typename T>
@@ -47,13 +49,17 @@ KMeans<T>::KMeans(char* filename, int k)
     loadDataSet(filename);
     row = dataSet.size();
     col = dataSet[0].size();
+	initCentroids();
+	infoNode node(-1, -1);
+	for (int i = 0; i < row; i++)
+		clusterInfo.push_back(node);
 }
 
 template <typename T>
 void KMeans<T>::initCentroids()
 {
 	vector<int> randSeq = genRandSeq(row);
-	for (int i = 0; i < K; i++)
+	for (int i = 0; i < k; i++)
 		centroids.push_back(dataSet[randSeq[i]]);
 }
 
@@ -86,9 +92,11 @@ void KMeans<T>::kmeans()
 {
     initCentroids();
     bool clusterChanged = true;
+	int iteration = 0;
     
     while (clusterChanged)
     {
+		cout << "Iteration: " << iteration++ << endl;
         clusterChanged = false;
         // assign each point to its nearest centroid
         for (int i = 0; i < row; i++)
@@ -159,9 +167,11 @@ void KMeans<T>::loadDataSet(char* filename)
 {
     ifstream in(filename);
     string buffer = "";
-    while (!in.eof)
+	// while (!in.eof()) {getline(in, buffer); ...} is wrong way of reading data from files 
+	// The EOF bit will never be set. 
+    // reference: http://josephmansfield.uk/articles/dont-condition-input-on-eof.html
+    while (getline(in, buffer))
     {
-        readline(in, buffer);
         istringstream iss(buffer);
         T temp;
         vector<T> dataRow;
@@ -171,15 +181,45 @@ void KMeans<T>::loadDataSet(char* filename)
     }
 }
 
+template <typename T>
+void KMeans<T>::print()
+{
+	ofstream fout("result.txt");
+	if (!fout)
+	{
+		cerr << "fail to open file result.txt" << endl;
+		exit(1);
+	}
+	cout << "centroids: " << endl;
+	for (int i = 0; i < k; i++)
+	{
+		cout << i << ": ";
+		for (int j = 0; j < col; j++)
+			cout << centroids[i][j] << " ";
+		cout << endl;
+	}
+	cout << "clustering result for dataSet: " << endl;
+	for (int i = 0; i < row; i++)
+	{
+		for (int j = 0; j < col; j++)
+		{
+			cout << dataSet[i][j] << " ";
+			fout << dataSet[i][j] << " ";
+		}
+		cout << "\t" << clusterInfo[i].centIndex << endl;
+		fout << "\t" << clusterInfo[i].centIndex << endl;
+	}
+}
+
 int main(int argc, char* argv[])
 {
-    if (argc < 3)
+    /*if (argc < 3)
     {
         cout << "Usage: kmeans filename k" << endl;
         exit(1);
     }
-    KMeans<double> km(argv[1], atoi(argv[2]));
-    vector<int> seq = km.genRandSeq(10);
-    for (int i = 0; i < seq.size(); i++)
-        cout << seq[i] << " ";
+    KMeans<double> km(argv[1], atoi(argv[2]));*/
+	KMeans<double> km("./dataSet.txt", 4);
+	km.kmeans();
+	km.print();  
 }
