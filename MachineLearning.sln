@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NaiveBayes", "NaiveBayes\Na
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KMeans", "KMeans\KMeans.vcxproj", "{A2ADCE93-1AFA-4A48-9FF4-F38C1C4899B4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KNN", "KNN\KNN.vcxproj", "{F39997EE-498D-45A9-926E-29659F3A4D27}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -33,6 +35,10 @@ Global
 		{A2ADCE93-1AFA-4A48-9FF4-F38C1C4899B4}.Debug|Win32.Build.0 = Debug|Win32
 		{A2ADCE93-1AFA-4A48-9FF4-F38C1C4899B4}.Release|Win32.ActiveCfg = Release|Win32
 		{A2ADCE93-1AFA-4A48-9FF4-F38C1C4899B4}.Release|Win32.Build.0 = Release|Win32
+		{F39997EE-498D-45A9-926E-29659F3A4D27}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F39997EE-498D-45A9-926E-29659F3A4D27}.Debug|Win32.Build.0 = Debug|Win32
+		{F39997EE-498D-45A9-926E-29659F3A4D27}.Release|Win32.ActiveCfg = Release|Win32
+		{F39997EE-498D-45A9-926E-29659F3A4D27}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

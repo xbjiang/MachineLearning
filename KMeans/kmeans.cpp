@@ -179,6 +179,7 @@ void KMeans<T>::loadDataSet(char* filename)
             dataRow.push_back(temp);
         dataSet.push_back(dataRow);
     }
+    in.close();
 }
 
 template <typename T>
@@ -209,6 +210,7 @@ void KMeans<T>::print()
 		cout << "\t" << clusterInfo[i].centIndex << endl;
 		fout << "\t" << clusterInfo[i].centIndex << endl;
 	}
+    fout.close();
 }
 
 int main(int argc, char* argv[])
