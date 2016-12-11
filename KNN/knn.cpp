@@ -4,29 +4,37 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 #include <map>
 #include <fstream>
 #include <sstream>
 #include <stdlib.h>
 #include <cmath>
 #include <algorithm>
+#include <utility>
 using namespace std;
 
 class KNN
 {
 private:
-	vector< vector<double> > dataSet;
-	vector<string> labelSet;
+	vector< vector<double> > trainSet;
+    vector< vector<double> > testSet;
+    double ratio; // size of trainSet to testSet 
+	vector<string> trainLabel;
+    vector<string> testLabel;
 	vector< pair<int, double> > distVec;
 	int K;
-	int row, col;
+    int dim; // dimension of the dataSet
 
 public:
-	KNN(char* filename, int k, int dim);
+	KNN(const char* filename, int k, double r, int d);
 	double distEuclid(vector<double>& vec1, vector<double>& vec2);
-	void loadDataSet(char* filename, int dim);
+	void loadDataSet(const char* filename);
 	void computeAllDist(vector<double>& testVec);
 	string classify(vector<double>& testVec);
+    double computeAccuracy(bool verbose);
+    vector<string>& split(const string& str, const char delim, vector<string>& ret);
+    vector<string>& split(const string& str, const string& delims, vector<string>& ret);
 	struct cmpByValue {
 		bool operator() (pair<int, double>& lhs, pair<int, double>& rhs)
 		{
@@ -35,12 +43,12 @@ public:
 	};
 };
 
-KNN::KNN(char* filename, int k, int dim) : K(K), col(dim)
+KNN::KNN(const char* filename, int k, double r, int d) : K(k), ratio(r), dim(d)
 {
-	loadDataSet(filename, dim);
+	loadDataSet(filename);
 }
 
-void KNN::loadDataSet(char* filename, int dim)
+void KNN::loadDataSet(const char* filename)
 {
 	ifstream fin(filename);
 	if (!fin)
@@ -48,24 +56,60 @@ void KNN::loadDataSet(char* filename, int dim)
 		cerr << "opening file" << filename << "failed!" << endl;
 		exit(1);
 	}
-	string buffer = "";
-	while (getline(fin, buffer)) // has to #include <sstream> ? why? do some research!
-	{
-		istringstream iss(buffer);
-		double tmp;
-		vector<double> itemLine;
-		for (int i = 0; i < dim; i++)
-		{
-			iss >> tmp;
-			itemLine.push_back(tmp);
-		}
-		dataSet.push_back(itemLine);
-		string label;
-		iss >> label;
-		labelSet.push_back(label);
-	}
-	row = labelSet.size();
-	fin.close();
+	string itemLine = "";
+    while (getline(fin, itemLine)) // has to #include <sstream> ? why? do some research!
+    {
+        vector<string> items;
+        double prob = double(rand()) / (double)RAND_MAX;
+        split(itemLine, ',', items);
+        vector<double> dataRow;
+        for (int i = 0; i < dim; i++)
+            dataRow.push_back(atof(items[i].c_str())); // both g++ and vs seem to have a bug about stof, use atof(str.c_str()) instead
+        if (prob > ratio)
+        {
+            trainSet.push_back(dataRow);
+            trainLabel.push_back(items[dim]);
+        }
+        else
+        {
+            testSet.push_back(dataRow);
+            testLabel.push_back(items[dim]);
+        }
+    }
+    fin.close();
+}
+
+/*
+* split a string, with one sigle delimiter
+*/
+vector<string>& KNN::split(const string& str, const char delim, vector<string>& ret)
+{
+    istringstream iss(str);
+    string item;
+    while (getline(iss, item, delim))
+    {
+        if (item.empty()) continue;
+        ret.push_back(item);
+    }
+    return ret;
+}
+
+/*
+* split a string, with multiple delimiters
+*/
+vector<string>& KNN::split(const string& str, const string& delims, vector<string>& ret)
+{
+    string::size_type pos, prev = 0;
+    while ((pos = str.find_first_of(delims, prev)) != string::npos)
+    {
+        if (pos > prev)
+        {
+            ret.emplace_back(str, prev, pos - prev);
+        }
+        prev = pos + 1;
+    }
+    if (prev < str.size()) ret.emplace_back(str, prev, str.size() - prev);
+    return ret;
 }
 
 double KNN::distEuclid(vector<double>& vec1, vector<double>& vec2)
@@ -85,16 +129,17 @@ double KNN::distEuclid(vector<double>& vec1, vector<double>& vec2)
 
 void KNN::computeAllDist(vector<double>& testVec)
 {
-	for (int i = 0; i < col; i++)
+    distVec.clear();
+	for (int i = 0; i < trainSet.size(); i++)
 	{
-		double dist = distEuclid(dataSet[i], testVec);
+		double dist = distEuclid(trainSet[i], testVec);
 		distVec.push_back(make_pair(i, dist));
 	}
 }
 
 string KNN::classify(vector<double>& testVec)
 {
-	if (testVec.size() != col)
+	if (testVec.size() != dim)
 	{
 		cerr << "Wrong dimension!" << endl;
 		exit(1);
@@ -105,7 +150,7 @@ string KNN::classify(vector<double>& testVec)
 	for (int i = 0; i < K; i++)
 	{
 		int idx = distVec[i].first;
-		labelCnt[labelSet[idx]]++;
+		labelCnt[trainLabel[idx]]++;
 	}
 	int maxCnt = 0;
 	string majorLabel = "";
@@ -120,4 +165,31 @@ string KNN::classify(vector<double>& testVec)
 		iter++;
 	}
 	return majorLabel;
+}
+
+double KNN::computeAccuracy(bool verbose=true)
+{
+    int cnt = 0;
+    int n = testSet.size();
+    string label = "";
+    if (verbose)
+        cout << "index\treal\tpredict" << endl;
+    for (int i = 0; i < n; i++)
+    {
+        label = classify(testSet[i]);
+        if (label == testLabel[i]) cnt++;
+        if (verbose)
+        {
+            cout << i << "\t" << testLabel[i]
+                << "\t" << label << endl;
+        }
+    }
+    return (double)cnt / (double)n;
+}
+
+int main()
+{
+    KNN knn("Iris.txt", 7, 0.67, 4);
+    double accuracy = knn.computeAccuracy();
+    cout << "The accuary is: " << accuracy << endl;
 }
