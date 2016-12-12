@@ -79,7 +79,7 @@ float dot_product(const PairArray& arr1, const PairArray& arr2)
 	return dot;
 }
 
-int main()
+/*int main()
 {
 	vector<PairArray> x;
 	vector<float> y;
@@ -96,4 +96,4 @@ int main()
 	}
 
 	std::cout << dot_product(x[0], x[0]) << endl;
-}
+}*/

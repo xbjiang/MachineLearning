@@ -11,10 +11,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="svm.h" />
     <ClInclude Include="svm_util.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sum_util.cpp" />
+    <ClCompile Include="svm.cpp" />
+    <ClCompile Include="svm_util.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{998B12CE-1DA0-473A-8CFD-71CA72D378CE}</ProjectGuid>
