@@ -19,6 +19,11 @@ vector<string>& split(const string& str, const string& delims, vector<string>& r
 	return ret;
 }
 
+bool cmp(const pair<int, float>& lhs, const pair<int, float>& rhs)
+{
+	return lhs.first < rhs.first;
+}
+
 void load_data_set(const string& filename, vector<PairArray>& x, vector<float>& y)
 {
 	ifstream fin(filename);
@@ -44,6 +49,7 @@ void load_data_set(const string& filename, vector<PairArray>& x, vector<float>& 
 			float val = atof(pairItem[1].c_str());
 			pArr.push_back(make_pair(idx, val));
 		}
+		sort(pArr.begin(), pArr.end(), cmp); // no need to add std:: ? why?
 		x.push_back(pArr);
 	}
 }
@@ -71,4 +77,23 @@ float dot_product(const PairArray& arr1, const PairArray& arr2)
 			p2++;
 	}
 	return dot;
+}
+
+int main()
+{
+	vector<PairArray> x;
+	vector<float> y;
+	load_data_set("heart_scale.test", x, y);
+	for (int i = 0; i < x.size(); i++)
+	{
+		std::cout << y[i] << " ";
+		for (int j = 0; j < x[i].size(); j++)
+		{
+			std::cout << x[i][j].first << ":"
+				<< x[i][j].second << " ";
+		}
+		std::cout << endl;
+	}
+
+	std::cout << dot_product(x[0], x[0]) << endl;
 }
