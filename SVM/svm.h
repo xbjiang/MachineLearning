@@ -1,5 +1,8 @@
 #include <math.h>
 #include <iomanip>
+#include <fstream>
+#include <string>
+#include <sstream>
 #include "svm_util.h"
 
 #ifndef SVM_H
@@ -28,11 +31,13 @@ protected:
 public:
     SVM();
     ~SVM();
-    void train(const string& filename);
-    void test(const string& filename);
+    void train(const string& fname_train, const string& fname_model);
+    void test(const string& fname_test, const string& fname_model);
     int predict(PairArray& x);
 
 protected:
+    int dump_model(std::ofstream& os);
+    int load_model(std::ifstream& is);
     float error_rate();
     float kernel(int i1, int i2);
     float learned_func(int k);

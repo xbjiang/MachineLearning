@@ -3,6 +3,7 @@ using std::ifstream;
 using std::cerr;
 using std::endl;
 using std::make_pair;
+using std::ostringstream;
 
 vector<string>& split(const string& str, const string& delims, vector<string>& ret)
 {
@@ -24,17 +25,10 @@ bool cmp(const pair<int, float>& lhs, const pair<int, float>& rhs)
 	return lhs.first < rhs.first;
 }
 
-void load_data_set(const string& filename, vector<PairArray>& x, vector<float>& y)
+int load_data_set(ifstream& is, vector<PairArray>& x, vector<float>& y)
 {
-	ifstream fin(filename);
-	if (!fin.is_open())
-	{
-		cerr << "Open file " << filename << "failed!" << endl;
-		exit(0);
-	}
-
 	string itemLine = "";
-	while (getline(fin, itemLine))
+	while (getline(is, itemLine))
 	{
 		vector<string> items;
 		split(itemLine, " ", items);
@@ -52,6 +46,7 @@ void load_data_set(const string& filename, vector<PairArray>& x, vector<float>& 
 		sort(pArr.begin(), pArr.end(), cmp); // no need to add std:: ? why?
 		x.push_back(pArr);
 	}
+    return 0;
 }
 
 float dot_product(const PairArray& arr1, const PairArray& arr2)
@@ -77,6 +72,16 @@ float dot_product(const PairArray& arr1, const PairArray& arr2)
 			p2++;
 	}
 	return dot;
+}
+
+int write_sample(string& s, PairArray& x, float& y)
+{
+    ostringstream oss;
+    oss << y;
+    for (int i = 0; i < x.size(); i++)
+        oss << " " << x[i].first << ":" << x[i].second;
+    s = oss.str();
+    return 0;
 }
 
 /*int main()

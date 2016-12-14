@@ -1,5 +1,12 @@
+/*
+* SVM 
+* Why are there so many support vectors? Is there a bug?
+*/
+
 #include "svm_util.h"
 #include "svm.h"
+using std::ifstream;
+using std::ofstream;
 
 SVM::SVM()
 {
@@ -12,14 +19,65 @@ SVM::SVM()
     _n_sv = 0;
 }
 
-void SVM::train(const string& filename)
+void SVM::test(const string& fname_test, const string& fname_model)
+{
+    _x_array.clear();
+    _y_array.clear();
+    _alpha.clear();
+    ifstream is_model(fname_model);
+    load_model(is_model);
+
+    ifstream is_test(fname_test);
+    load_data_set(is_test, _x_array, _y_array); // load test set
+
+    _n = _x_array.size();
+
+    int n_correct = 0;
+    int y_pred = 0;
+    for (int i = _n_sv; i < _n; i++)
+    {
+        float f = 0;
+        for (int j = 0; j < _n_sv; j++)
+        {
+            f += _alpha[j] * _y_array[j] * kernel(j, i);
+        }
+        f -= _b;
+        y_pred = f >= 0 ? 1.0 : -1.0;
+        std::cerr << "y_real: " << _y_array[i] << "\t"
+            << "y_pred: " << y_pred << std::endl;
+        if ((y_pred > 0 && _y_array[i] > 0)
+            || (y_pred < 0 && _y_array[i])) // why don't I just use (y_pred == _y_array[i])? Again, you need to do some research on float comparison! 
+        {
+            n_correct++;
+        }
+    }
+    std::cerr << std::setprecision(5)
+        << "Accuracy: " << 100.0 * n_correct / (_n - _n_sv)
+        << "% (" << n_correct << "/" << (_n - _n_sv) << ")"
+        << std::endl;
+}
+
+int SVM::load_model(ifstream& is)
+{
+    is >> _b;
+    is >> _n_sv;
+    _alpha.resize(_n_sv, 0.0);
+    for (int i = 0; i < _n_sv; i++)
+        is >> _alpha[i];
+    is.ignore(); // ignore an "\n"
+    load_data_set(is, _x_array, _y_array);
+    return 0;
+}
+
+void SVM::train(const string& fname_train, const string& fname_model)
 {
     _alpha.clear();
     _x_array.clear();
     _y_array.clear();
     _error_cache.clear();
 
-    load_data_set(filename, _x_array, _y_array);
+    ifstream is(fname_train);
+    load_data_set(is, _x_array, _y_array);
     _n = _x_array.size();
     _b = 0.0;
     _alpha.resize(_n, 0.0);
@@ -75,6 +133,38 @@ void SVM::train(const string& filename)
         else if (num_changed == 0)
             examine_all = 1;
     }
+
+    ofstream os(fname_model);
+    dump_model(os);
+}
+
+int SVM::dump_model(ofstream& os)
+{
+    os << _b << std::endl;
+    _n_sv = 0;
+    vector<int> idx_vec;
+    for (int i = 0; i < _n; i++)
+    {
+        if (_alpha[i] > 0)
+        {
+            _n_sv++;
+            idx_vec.push_back(i);
+        }
+    }
+    os << _n_sv << std::endl;
+    for (int i = 0; i < idx_vec.size(); i++)
+    {
+        int idx = idx_vec[i];
+        os << _alpha[idx] << std::endl;
+    }
+    for (int i = 0; i < idx_vec.size(); i++)
+    {
+        string s;
+        int idx = idx_vec[i];
+        write_sample(s, _x_array[idx], _y_array[idx]);
+        os << s << std::endl;
+    }
+    return 0;
 }
 
 float SVM::error_rate()
