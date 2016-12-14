@@ -1,4 +1,3 @@
-#include <math.h>
 #include "svm_util.h"
 #include "svm.h"
 
@@ -28,8 +27,10 @@ void SVM::train(const string& filename)
 
     int num_changed = 0;
     int examine_all = 1;
+    int iter_num = 0;
     while (num_changed > 0 || examine_all)
     {
+        iter_num++;
         num_changed = 0;
         if (examine_all)
         {
@@ -45,11 +46,49 @@ void SVM::train(const string& filename)
             }
         }
 
+        float s = 0.0;
+        float t = 0.0;
+        float obj = 0.0;
+        for (int i = 0; i < _n; i++)
+        {
+            s += _alpha[i];
+        }
+
+        for (int i = 0; i < _n; i++)
+        {
+            for (int j = 0; j < _n; j++)
+            {
+                t += _alpha[i] * _alpha[j] * _y_array[i] * _y_array[j] * kernel(i, j);
+            }
+        }
+        obj = s - t / 2.0;
+        std::cerr << std::setprecision(5) 
+            << "Iteration: " << iter_num << "\t"
+            << "examine_all: " << examine_all << "\t"
+            << "num_changed: " << num_changed << "\t"
+            << "Objective func: " << obj << "\t"
+            << "Error rate: " << error_rate() 
+            << std::endl;
+
         if (examine_all)
-            examine_all = 0; 
+            examine_all = 0;
         else if (num_changed == 0)
             examine_all = 1;
     }
+}
+
+float SVM::error_rate()
+{
+    int n_error = 0;
+    for (int i = 0; i < _n; i++)
+    {
+        if ((learned_func(i) >= 0 && _y_array[i] < 0)
+            || (learned_func(i) < 0 && _y_array[i] > 0))
+        {
+            n_error++;
+        }
+    }
+    return 1.0 * n_error / _n;
 }
 
 int SVM::examine_example(int i1)
@@ -130,10 +169,9 @@ float SVM::learned_func(int k)
     float f = 0.0;
     for (int i = 0; i < _n; i++)
     {
-        if (_alpha[i] != 0)
+        if (_alpha[i] > 0)
         {
-            f += _alpha[i] * _y_array[i] 
-                * dot_product(_x_array[i], _x_array[k]);
+            f += _alpha[i] * _y_array[i] * kernel(i, k);
         }
     }
     f -= _b;
@@ -165,11 +203,11 @@ int SVM::take_step(int i1, int i2)
     float L = 0.0;
     float H = 0.0;
     float s = y1 * y2;
-    float gamma = y1 + s * y2;
+    float gamma = alpha1 + s * alpha2;
     if (s == 1)
     {
-        L = std::max(_c, gamma);
-        H = std::min(0.0f, gamma - _c);
+        L = std::max(0.0f, gamma - _c);
+        H = std::min(_c, gamma);
     }
     else 
     {
@@ -196,41 +234,41 @@ int SVM::take_step(int i1, int i2)
         float L_obj = c1 * L * L + c2 * L;
         float H_obj = c1 * H * H + c2 * H;
         if (L_obj < H_obj - _eps)
-            a2 = H_obj;
+            a2 = H;
         else if (L_obj > H_obj + _eps)
-            a2 = L_obj;
+            a2 = L;
         else
             a2 = alpha2;
     }
 
-    if ((a2 - alpha2) < _eps * (a2 + alpha2 + _eps))
+    if (fabs(a2 - alpha2) < _eps * (a2 + alpha2 + _eps))
         return 0;
 
     a1 = alpha1 - s * (a2 - alpha2);
     if (a1 < 0)
     {
+        a2 += s * a1; // compute a2 before a1, or store (0-a1) first
         a1 = 0;
-        a2 += s * a1;
     }
-    else if (a1 > _c)
+    else if (a1 > _c) 
     {
+        a2 += s * (a1 - _c);
         a1 = _c;
-        a2 = s * (a1 - _c);
     }
 
     float delta_b = 0.0;
-    if (alpha1 > 0 && alpha1 < _c)
+    if (a1 > 0 && a1 < _c)
     {
         delta_b = e1 + (a1 - alpha1) * y1 * K11 + (a2 - alpha2) * y2 * K12;
     }
-    else if (alpha2 > 0 && alpha2 < _c)
+    else if (a2 > 0 && a2 < _c)
     {
-        delta_b = e2 + (a1 - alpha2) * y2 * K12 + (a2 - alpha2) * y2 * K22;
+        delta_b = e2 + (a1 - alpha1) * y1 * K12 + (a2 - alpha2) * y2 * K22;
     }
     else
     {
         float b1 = e1 + (a1 - alpha1) * y1 * K11 + (a2 - alpha2) * y2 * K12;
-        float b2 = e2 + (a1 - alpha2) * y2 * K12 + (a2 - alpha2) * y2 * K22;
+        float b2 = e2 + (a1 - alpha1) * y1 * K12 + (a2 - alpha2) * y2 * K22;
         delta_b = (b1 + b2) / 2.0;
     }
     _b += delta_b;
@@ -241,7 +279,7 @@ int SVM::take_step(int i1, int i2)
     {
         if (_alpha[i] > 0 && _alpha[i] < _c)
         {
-            _error_cache[i] += t1 * kernel(i1, i) + t1 * kernel(i2, i) - delta_b;
+            _error_cache[i] += t1 * kernel(i1, i) + t2 * kernel(i2, i) - delta_b;
         }
     }
 
@@ -252,3 +290,5 @@ int SVM::take_step(int i1, int i2)
     _alpha[i2] = a2;
     return 1;
 }
+
+SVM::~SVM() {}

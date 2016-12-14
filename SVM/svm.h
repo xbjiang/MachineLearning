@@ -1,3 +1,5 @@
+#include <math.h>
+#include <iomanip>
 #include "svm_util.h"
 
 #ifndef SVM_H
@@ -31,6 +33,7 @@ public:
     int predict(PairArray& x);
 
 protected:
+    float error_rate();
     float kernel(int i1, int i2);
     float learned_func(int k);
     int examine_example(int i1);
