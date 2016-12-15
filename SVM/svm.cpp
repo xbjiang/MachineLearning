@@ -1,6 +1,7 @@
 /*
 * SVM 
 * Why are there so many support vectors? Is there a bug?
+* Because if _alpha[i] = _c, it's not a support vector.
 */
 
 #include "svm_util.h"
@@ -45,8 +46,9 @@ void SVM::test(const string& fname_test, const string& fname_model)
         y_pred = f >= 0 ? 1.0 : -1.0;
         std::cerr << "y_real: " << _y_array[i] << "\t"
             << "y_pred: " << y_pred << std::endl;
-        if ((y_pred > 0 && _y_array[i] > 0)
-            || (y_pred < 0 && _y_array[i])) // why don't I just use (y_pred == _y_array[i])? Again, you need to do some research on float comparison! 
+        /*if ((y_pred > 0 && _y_array[i] > 0)
+            || (y_pred < 0 && _y_array[i] < 0))*/ // why don't I just use (y_pred == _y_array[i])? Again, you need to do some research on float comparison! 
+        if (y_pred * _y_array[i] > 0)
         {
             n_correct++;
         }
@@ -127,6 +129,12 @@ void SVM::train(const string& fname_train, const string& fname_model)
             << "Objective func: " << obj << "\t"
             << "Error rate: " << error_rate() 
             << std::endl;
+
+        for (int i = 0; i < _n; i++)
+        {
+            if (_alpha[i] < 1e-6)
+                _alpha[i] = 0.0;
+        }
 
         if (examine_all)
             examine_all = 0;
