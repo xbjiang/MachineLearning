@@ -17,13 +17,14 @@ int PLAPocket::train(const fmatrix& X, const std::vector<float>& Y,
 {
     std::size_t row = X.size();
     std::size_t col = X[0].size();
-    if (Y.size() != row || D.size() != row)
+    /*if (Y.size() != row || D.size() != row)
     {
         std::cerr << "Wrong dimension!" << std::endl;
         exit(1);
-    }
+    }*/ // parameter check should be done in the outermost layer
     _weight.resize(col, 0.0);
     _y_pred.resize(row, 0.0);
+    _min_error = 1.0;
 
     int update = 0;
     float min_loss = 1.0;
@@ -35,28 +36,28 @@ int PLAPocket::train(const fmatrix& X, const std::vector<float>& Y,
         if (classify(X[i]) == Y[i]) continue;
         
         update++;
-        for (int j = 0; j < col; j++)
+        for (std::size_t j = 0; j < col; j++)
         {
             w_new[j] += _alpha * Y[i] * X[i][j] * D[i];
         }
         
-        float loss = 0.0;
-        for (int k = 0; k < row; k++)
+        float error = 0.0;
+        for (std::size_t k = 0; k < row; k++)
         {
             y_new[k] = classify(X[k]);
             if (y_new[k] != Y[k])
-                loss += D[k];
+                error += D[k];
         }
-        if (loss < min_loss)
+        if (error < _min_error)
         {
-            min_loss = loss;
+            _min_error = error;
             _weight = w_new; // you can't use swap here because w_new has to used in the next iteration
             _y_pred.swap(y_new);
         }
 
         /*std::cerr << std::setprecision(5)
             << "iteration: " << update << "\t"
-            << "loss: " << loss << "\t"
+            << "error: " << error << "\t"
             << "i: " << i
             << std::endl;*/
     }
@@ -71,12 +72,50 @@ float PLAPocket::classify(const std::vector<float>&x)
         exit(1);
     }
     float s = 0.0;
-    for (int i = 0; i < x.size(); i++)
+    for (std::size_t i = 0; i < x.size(); i++)
         s += _weight[i] * x[i];
-    return s > 0 ? 1.0 : -1.0;
+    return s >= 0 ? 1.0 : -1.0;
+}
+
+PLAPocket* PLAPocket::clone()
+{
+    return new PLAPocket(*this);
 }
 
 const std::vector<float>& PLAPocket::get_y_pred()
 {
     return _y_pred;
+}
+
+float PLAPocket::get_error()
+{
+    return _min_error;
+}
+
+float PLAPocket::test(const fmatrix& X, const std::vector<float>& Y)
+{
+    std::size_t N = X.size();
+    if (Y.size() != N)
+    {
+        std::cerr << "Wrong dimension!" << std::endl;
+        exit(1);
+    }
+
+    int n_correct = 0;
+    for (std::size_t i = 0; i < N; i++)
+    {
+        float Y_pred = classify(X[i]);
+        if (Y_pred == Y[i])
+            n_correct++;
+        /*std::cerr << i << "\t"
+            << "y_real: " << Y[i] << "\t"
+            << "y_pred: " << Y_pred << "\t"
+            << std::endl;*/
+    }
+    float accuracy = (float)n_correct / (float)N;
+    /*std::cerr << std::setprecision(5)
+        << "Accuracy: " << accuracy << "%"
+        << "(" << n_correct << " of " << N << ")"
+        << std::endl;*/
+    return accuracy;
 }

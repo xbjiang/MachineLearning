@@ -65,11 +65,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AdaBoost.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PLAPocket.cpp" />
     <ClCompile Include="WeakLearner.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AdaBoost.h" />
     <ClInclude Include="PLAPocket.h" />
   </ItemGroup>
   <ItemGroup>

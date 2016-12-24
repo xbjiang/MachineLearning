@@ -48,3 +48,16 @@ int read_from_kvfile(ifstream& is, vector< vector<float> >& X, vector<float>& Y)
     }
     return 0;
 }
+
+void load_data_set(const string& filename, vector< vector<float> >& X, vector<float>& Y)
+{
+    ifstream in(filename);
+    if (!in.is_open())
+    {
+        std::cerr << "Cannot open file" << filename << std::endl;
+        exit(1);
+    }
+    X.clear();
+    Y.clear();
+    read_from_kvfile(in, X, Y);
+}

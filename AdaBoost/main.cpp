@@ -1,41 +1,29 @@
 #include "../Utils/Utils.h"
 #include "PLAPocket.h"
 #include "WeakLearner.h"
+#include "AdaBoost.h"
 #include <fstream>
 #include <stdlib.h>
 #include <iomanip>
 
 int main(int argc, char* argv[])
 {
-    char* filename = "../Data/heart_scale.train";
-    ifstream in(filename);
-    if (!in.is_open())
+    if (argc < 2)
     {
-        std::cerr << "Cannot open file" << filename << std::endl;
+        std::cerr << "Usage: AdaBoost [num_of_learners]" << std::endl;
         exit(1);
     }
+    const char* filename = "../Data/heart_scale.train";
     std::vector< std::vector<float> > X;
     std::vector<float> Y;
-    read_from_kvfile(in, X, Y);
-    /*for (auto x : X)
-    {
-        for (auto item : x)
-            std::cout << item << " ";
-        std::cout << std::endl;
-    }*/
-    int row = X.size();
-    std::vector<float> D(row, 1.0 / row);
-    WeakLearner* wl = new PLAPocket();
-    wl->train(X, Y, D);
-    const std::vector<float>& Y_pred = wl->get_y_pred();
-    int n_correct = 0;
-    for (std::size_t i = 0; i < Y.size(); i++)
-    {
-        std::cout << "y: " << Y[i] << "\t"
-            << "y_pred: " << Y_pred[i] << std::endl;
-        if (Y[i] == Y_pred[i])
-            n_correct++;
-    }
-    std::cout << std::setprecision(5) << "Accuracy: "
-        << ((float)n_correct / (float)row) << "%" << std::endl;
+    load_data_set(filename, X, Y);
+    
+    //PLAPocket pocket(); // this is function declaration, not default initializaiton
+    PLAPocket pocket(1.0, 100);
+    AdaBoost adaboost(atoi(argv[1]), pocket);
+    adaboost.train(X, Y);
+
+    filename = "../Data/heart_scale.test";
+    load_data_set(filename, X, Y);
+    adaboost.test(X, Y);
 }

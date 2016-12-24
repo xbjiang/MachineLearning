@@ -15,7 +15,10 @@ public:
     ~WeakLearner() {};
     virtual int train(const fmatrix& X, const std::vector<float>& Y, const std::vector<float>& D) = 0;
 	virtual float classify(const std::vector<float>& x) = 0; 
+    virtual WeakLearner* clone() = 0;
     virtual const std::vector<float>& get_y_pred() = 0;
+    virtual float get_error() = 0;
+    virtual float test(const fmatrix& X, const std::vector<float>& Y) = 0;
 };
 
 #endif
