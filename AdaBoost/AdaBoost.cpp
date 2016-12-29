@@ -4,24 +4,27 @@
 #include <stdlib.h>
 #include <iostream>
 #include <iomanip>
+#include <memory>
 
 AdaBoost::AdaBoost(std::size_t m, WeakLearner& wl) : _M(m)
 {
     for (std::size_t i = 0; i < m; i++)
     {
-        WeakLearner* pwl = wl.clone();
+        // WeakLearner* pwl = wl.clone();
+        std::shared_ptr<WeakLearner> pwl(wl.clone());
         _pwls.push_back(pwl);
     }
     _alpha.resize(m, 0.0);
 }
 
-AdaBoost::~AdaBoost()
+// destructor is not necessary now since resources are managed by shared_ptr
+/*AdaBoost::~AdaBoost()
 {
     for (std::size_t i = 0; i < _pwls.size(); i++)
     {
         delete _pwls[i];
     }
-}
+}*/
 
 int AdaBoost::train(const fmatrix& X, const std::vector<float>& Y)
 {
