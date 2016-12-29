@@ -8,7 +8,7 @@ class PLAPocket : public WeakLearner
 {
 public:
     PLAPocket(float alpha = 1.0, int max_update = 100, float eps = 5e-2);
-    virtual ~PLAPocket();
+    virtual ~PLAPocket() override;
     virtual int train(const fmatrix& X, const std::vector<float>& Y, const std::vector<float>& D) override;
     virtual float classify(const std::vector<float>& x) override;
     virtual PLAPocket* clone() override;
